@@ -1,0 +1,38 @@
+# apps/req-eval/app/utils/retriever.py
+import os
+from typing import List, Tuple
+from openai import OpenAI
+from qdrant_client import QdrantClient
+from qdrant_client.http import models as rest
+
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "http://litellm:4000/v1")
+OPENAI_API_KEY  = os.getenv("OPENAI_API_KEY", "sk-1234")
+EMBED_MODEL     = os.getenv("EMBEDDING_MODEL", "azure-embedding-large")  # alias in litellm-config.yaml
+QDRANT_URL      = os.getenv("QDRANT_URL", "http://qdrant:6333")
+KB_COLLECTION   = os.getenv("KB_COLLECTION", "kb_requirements_best_practices")
+
+def _embed(texts: List[str]) -> List[List[float]]:
+    client = OpenAI(base_url=OPENAI_BASE_URL, api_key=OPENAI_API_KEY)
+    resp = client.embeddings.create(model=EMBED_MODEL, input=texts)
+    return [d.embedding for d in resp.data]
+
+def retrieve_topk(query: str, top_k: int = 4) -> List[Tuple[str, float]]:
+    qdrant = QdrantClient(
+        url=os.getenv("QDRANT_URL", "http://qdrant:6333"),#QDRANT_URL, 
+        api_key=os.getenv("QDRANT_API_KEY"),
+        prefer_grpc=False
+    )
+    vec = _embed([query])[0]
+    result = qdrant.search(
+        collection_name=KB_COLLECTION,
+        query_vector=vec,
+        limit=top_k,
+        with_payload=True,
+        score_threshold=None,
+    )
+    chunks = []
+    for p in result:
+        payload = p.payload or {}
+        # Try common keys Open-WebUI/Qdrant payloads use text = payload.get("text") or payload.get("page_content") or payload.get("content") or payload.get("chunk") or "" chunks.append((text, p.score)) # filter empties, keep best return [(t, s) for (t, s) in chunks if t][:top_k] def join_context(chunks: List[Tuple[str, float]]) -> str:
+    return "\n\n".join([f"- {t}" for t, _ in chunks])
+

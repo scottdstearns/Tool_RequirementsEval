@@ -1,0 +1,30 @@
+from dataclasses import dataclass, field, asdict
+from typing import Dict, Any
+
+@dataclass
+class Requirement:
+    id: str
+    text: str
+
+@dataclass
+class RequirementEvaluation:
+    criterion_scores: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    overall_score: float = 0.0
+    overall_status: str = ""
+    suggested_rewrite: str = ""
+
+    @classmethod
+    def from_json(cls, d: Dict[str, Any]) -> "RequirementEvaluation":
+        # tolerate minor key variants
+        data = dict(d or {})
+        if "criteria" in data and "criterion_scores" not in data:
+            data["criterion_scores"] = data.pop("criteria")
+        return cls(
+            criterion_scores=data.get("criterion_scores", {}),
+            overall_score=float(data.get("overall_score", 0) or 0),
+            overall_status=str(data.get("overall_status", "")),
+            suggested_rewrite=str(data.get("suggested_rewrite", "")),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)

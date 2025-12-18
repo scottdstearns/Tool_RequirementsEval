@@ -1,0 +1,12 @@
+streamlit
+pandas
+python-docx
+PyPDF2
+openpyxl
+xlrd
+xlsxwriter
+python-dotenv
+openai>=1.30.0
+tiktoken
+qdrant-client>=1.8,<2.0
+

@@ -1,0 +1,33 @@
+# apps/req-eval/app/utils/openwebui_client.py
+from openai import OpenAI
+import os
+
+BASE  = os.getenv("OPENAI_BASE_URL", "http://litellm:4000/v1")
+KEY   = os.getenv("OPENAI_API_KEY", "sk-1234")
+MODEL = os.getenv("CHAT_MODEL", "azure-gpt-4o")
+
+class OpenWebUIClient:
+    def __init__(self, model: str = MODEL):
+        self.client = OpenAI(base_url=BASE, api_key=KEY)
+        self.model = model
+
+    def evaluate_requirement(self, requirement_text: str, evaluation_criteria: str, context: str | None = None) -> str:
+        system_prompt = (
+            "You are an expert requirements engineer (INCOSE). "
+            "Return ONLY JSON with fields: "
+            "criterion_scores{criterion:{score,explanation}}, "
+            "overall_score, overall_status, suggested_rewrite. "
+            "overall_score MUST be the average of criterion scores (0-1) rounded to 2 decimals. "
+            "overall_status = 'Pass' if score>=0.75, 'Needs-Revision' if 0.60–0.74, else 'Fail'."
+        )
+        user = f'Requirement: "{requirement_text}"\nCriteria:\n{evaluation_criteria}'
+        if context:
+            user = f"{user}\n\nContext (top-K from knowledge base):\n{context}"
+        resp = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role":"system","content":system_prompt},
+                      {"role":"user","content":user}],
+            response_format={"type":"json_object"}
+        )
+        return resp.choices[0].message.content
+

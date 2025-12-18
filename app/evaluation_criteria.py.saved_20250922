@@ -1,0 +1,19 @@
+# Minimal criteria text used by the evaluator prompt
+
+SIMPLIFIED_CRITERIA = """
+Score each criterion from 0.0 to 1.0 and explain briefly.
+Criteria:
+- Atomic: one requirement per statement; no conjunctions that hide multiple needs.
+- Unambiguous: avoids vague terms (fast, user-friendly, minimal).
+- Verifiable: objectively testable; includes measurable conditions or thresholds.
+- Feasible: technically achievable within expected constraints.
+- Clear grammar: active voice; no TBD/TBR; consistent terms and units.
+"""
+
+INCOSE_CRITERIA = """
+Follow INCOSE rules of writing good requirements. Score 0.0–1.0 and explain.
+Criteria:
+- Necessary, Implementation-free, Singular, Complete, Consistent,
+  Unambiguous, Feasible, Verifiable, Traceable.
+If inadequate information, state so explicitly.
+"""

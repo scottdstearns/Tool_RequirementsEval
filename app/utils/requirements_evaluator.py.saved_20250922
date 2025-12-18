@@ -1,0 +1,102 @@
+import json
+from typing import List, Dict, Any
+import pandas as pd
+#from app.utils.azure_openai_client import AzureOpenAIClient
+from app.utils.openwebui_client import OpenWebUIClient as AzureOpenAIClient  # new (via LiteLLM)
+from app.models.requirement import Requirement, RequirementEvaluation
+from app.evaluation_criteria import DEFAULT_CRITERIA
+
+class RequirementsEvaluator:
+    """
+    Evaluates requirements using Azure OpenAI and produces improvement suggestions
+    """
+    
+    def __init__(self, criteria: str = DEFAULT_CRITERIA):
+        """
+        Initialize the requirements evaluator
+        
+        Args:
+            criteria: The evaluation criteria to use (defaults to DEFAULT_CRITERIA)
+        """
+        self.azure_client = AzureOpenAIClient()
+        self.criteria = criteria
+    
+    def evaluate_requirements(self, requirements: List[Requirement]) -> List[Requirement]:
+        """
+        Evaluate a list of requirements and update them with evaluations
+        
+        Args:
+            requirements: List of requirements to evaluate
+            
+        Returns:
+            The same requirements list with evaluation data added
+        """
+        for req in requirements:
+            evaluation_json = self.azure_client.evaluate_requirement(
+                requirement_text=req.text,
+                evaluation_criteria=self.criteria
+            )
+            
+            # Parse the evaluation results
+            req.evaluation = RequirementEvaluation.from_json(evaluation_json)
+            print(f"Evaluated requirement {req.id}: {req.evaluation}") # Debugging output sds
+        
+        return requirements
+    
+    def generate_evaluation_report(self, requirements: List[Requirement]) -> pd.DataFrame:
+        """
+        Generate a DataFrame report of the evaluation results
+        
+        Args:
+            requirements: List of evaluated requirements
+            
+        Returns:
+            DataFrame containing the evaluation report
+        """
+        report_data = []
+        
+        for req in requirements:
+            if not req.evaluation:
+                continue
+                
+            row = {
+                'ID': req.id,
+                'Requirement Text': req.text,
+                'Overall Score': req.evaluation.overall_score,
+                'Status': req.evaluation.overall_status
+            }
+            
+            # Add individual criterion scores
+            for criterion, score in req.evaluation.criterion_scores.items():
+                row[f'{criterion} Score'] = score.score
+                row[f'{criterion} Explanation'] = score.explanation
+            
+            # Add suggested rewrite if available
+            if req.evaluation.suggested_rewrite:
+                row['Suggested Rewrite'] = req.evaluation.suggested_rewrite
+            
+            report_data.append(row)
+        
+        return pd.DataFrame(report_data)
+    
+    def export_report_to_csv(self, requirements: List[Requirement], output_path: str) -> None:
+        """
+        Export the evaluation report to a CSV file
+        
+        Args:
+            requirements: List of evaluated requirements
+            output_path: Path to save the CSV file
+        """
+        df = self.generate_evaluation_report(requirements)
+        df.to_csv(output_path, index=False)
+    
+    def export_report_to_excel(self, requirements: List[Requirement], output_path: str) -> None:
+        """
+        Export the evaluation report to an Excel file
+        
+        Args:
+            requirements: List of evaluated requirements
+            output_path: Path to save the Excel file
+        """
+        df = self.generate_evaluation_report(requirements)
+        df.to_excel(output_path, index=False) 

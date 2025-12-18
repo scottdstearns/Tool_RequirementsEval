@@ -1,0 +1,36 @@
+from dotenv import load_dotenv
+import os
+
+# Explicitly load the correct .env file
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
+load_dotenv(dotenv_path)
+
+# Retrieve the endpoint
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+# Debugging output to confirm .env file loading
+print(f"Loading .env file from: {dotenv_path}")
+print(f"AZURE_OPENAI_ENDPOINT retrieved: {AZURE_OPENAI_ENDPOINT}")
+
+# Retrieve the API key
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+# Debugging output to confirm API key loading
+print(f"AZURE_OPENAI_API_KEY retrieved: {AZURE_OPENAI_API_KEY}")
+
+# Retrieve the API version
+AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION")
+# Debugging output to confirm API version loading
+print(f"AZURE_OPENAI_API_VERSION retrieved: {AZURE_OPENAI_API_VERSION}")
+
+# Retrieve additional environment variables
+AZURE_OPENAI_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
+EMBEDDINGS_DEPLOYMENT_NAME = os.getenv("EMBEDDINGS_DEPLOYMENT_NAME")
+DEBUG = os.getenv("DEBUG")
+TEMP_FOLDER = os.getenv("TEMP_FOLDER")
+MAX_FILE_SIZE_MB = os.getenv("MAX_FILE_SIZE_MB")
+
+# Debugging output to confirm additional variables loading
+print(f"AZURE_OPENAI_DEPLOYMENT_NAME retrieved: {AZURE_OPENAI_DEPLOYMENT_NAME}")
+print(f"EMBEDDINGS_DEPLOYMENT_NAME retrieved: {EMBEDDINGS_DEPLOYMENT_NAME}")
+print(f"DEBUG retrieved: {DEBUG}")
+print(f"TEMP_FOLDER retrieved: {TEMP_FOLDER}")
+print(f"MAX_FILE_SIZE_MB retrieved: {MAX_FILE_SIZE_MB}")
