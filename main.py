@@ -18,6 +18,34 @@ from app.evaluation_criteria import INCOSE_CRITERIA, SIMPLIFIED_CRITERIA
 from app.settings import Settings
 from qdrant_client import QdrantClient
 
+# Initialize settings and validate configuration
+settings = Settings()
+
+def test_litellm_connectivity():
+    """Test connectivity to LiteLLM proxy on startup"""
+    try:
+        from openai import OpenAI
+        client = OpenAI(base_url=settings.openai_base_url, api_key=settings.openai_api_key)
+        # Simple test with minimal tokens to check connectivity
+        response = client.chat.completions.create(
+            model=settings.chat_model,
+            messages=[{"role": "user", "content": "test"}],
+            max_tokens=5,
+            timeout=10
+        )
+        print("✅ LiteLLM connectivity test: SUCCESS")
+        return True
+    except Exception as e:
+        print(f"⚠️  LiteLLM connectivity test: FAILED - {str(e)}")
+        print("   App will continue but may encounter issues during evaluation.")
+        return False
+
+# Test connectivity at startup (non-blocking)
+try:
+    test_litellm_connectivity()
+except:
+    pass  # Don't block app startup if test fails
+
 # Info about knowledge base
 def df_to_xlsx_bytes(df: pd.DataFrame) -> bytes:
     buf = io.BytesIO()
